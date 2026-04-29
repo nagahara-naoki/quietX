@@ -50,8 +50,9 @@ export default defineManifest({
   ],
   web_accessible_resources: [
     {
+      matches: ['https://twitter.com/*', 'https://x.com/*'],
       resources: ['src/bookmarks.html'],
-      matches: ['https://x.com/*', 'https://twitter.com/*']
+      use_dynamic_url: false
     }
   ]
 });
