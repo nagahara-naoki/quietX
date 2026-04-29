@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title data-i18n="bookmarksPageTitle">保存した投稿 - Quiet X</title>
+  <link rel="stylesheet" href="./bookmarks.css">
+</head>
+<body>
+  <header class="page-header">
+    <div class="header-inner">
+      <div class="header-title">
+        <h1 data-i18n="savedPosts">保存した投稿</h1>
+        <span class="count" id="count">0件</span>
+      </div>
+
+      <div class="controls">
+        <input
+          type="search"
+          id="search"
+          placeholder="本文・投稿者で検索"
+          data-i18n-placeholder="searchPlaceholder"
+          autocomplete="off"
+        >
+        <select id="sort">
+          <option value="savedAt-desc" data-i18n="sortNewestSaved">保存が新しい順</option>
+          <option value="savedAt-asc" data-i18n="sortOldestSaved">保存が古い順</option>
+          <option value="datetime-desc" data-i18n="sortNewestPost">投稿が新しい順</option>
+          <option value="datetime-asc" data-i18n="sortOldestPost">投稿が古い順</option>
+        </select>
+        <select id="language-select" aria-label="言語" data-i18n-aria-label="languageLabel">
+          <option value="ja" data-i18n="languageJapanese">日本語</option>
+          <option value="en" data-i18n="languageEnglish">English</option>
+        </select>
+        <button id="export" type="button" class="btn" data-i18n="export">エクスポート</button>
+        <button id="clear-all" type="button" class="btn btn-danger" data-i18n="clearAll">全削除</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="list" class="bookmark-list"></main>
+
+  <div id="empty" class="empty-state hidden">
+    <h2 data-i18n="noSavedPostsTitle">まだ保存した投稿はありません</h2>
+    <p data-i18n="noSavedPostsBody">Xの各投稿のアクションバーにある星ボタンでローカルに保存できます。</p>
+  </div>
+
+  <div id="no-results" class="empty-state hidden">
+    <h2 data-i18n="noResultsTitle">検索結果なし</h2>
+    <p data-i18n="noResultsBody">条件に合う保存済み投稿が見つかりませんでした。</p>
+  </div>
+
+  <script type="module" src="./bookmarks.ts"></script>
+</body>
+</html>

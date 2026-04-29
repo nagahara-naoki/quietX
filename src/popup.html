@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title data-i18n="appName">Quiet X</title>
+  <link rel="stylesheet" href="./popup.css">
+</head>
+<body>
+  <h1 data-i18n="appName">Quiet X</h1>
+
+  <section class="language-section">
+    <label class="language-row">
+      <span class="language-label" data-i18n="languageLabel">言語</span>
+      <select id="language-select" aria-label="言語" data-i18n-aria-label="languageLabel">
+        <option value="ja" data-i18n="languageJapanese">日本語</option>
+        <option value="en" data-i18n="languageEnglish">English</option>
+      </select>
+    </label>
+  </section>
+
+  <section class="description-toggle-section">
+    <label class="toggle-row description-toggle-row">
+      <span class="toggle-label" data-i18n="showDescriptions">説明を表示</span>
+      <input type="checkbox" id="toggle-descriptions" class="switch">
+    </label>
+  </section>
+
+  <section class="toggles">
+    <label class="toggle-row">
+      <span class="toggle-copy">
+        <span class="toggle-label" data-i18n="hideHoverCards">ホバーカードを非表示</span>
+        <span class="toggle-description" data-i18n="hideHoverCardsDescription">プロフィールなどのホバーカードを開かないようにします。</span>
+      </span>
+      <input type="checkbox" id="toggle-hover" class="switch">
+    </label>
+
+    <label class="toggle-row">
+      <span class="toggle-copy">
+        <span class="toggle-label" data-i18n="removeVideos">動画をタイムラインから削除</span>
+        <span class="toggle-description" data-i18n="removeVideosDescription">タイムライン上の動画枠を非表示にします。</span>
+      </span>
+      <input type="checkbox" id="toggle-video" class="switch">
+    </label>
+
+    <label class="toggle-row">
+      <span class="toggle-copy">
+        <span class="toggle-label" data-i18n="removeImages">画像をタイムラインから削除</span>
+        <span class="toggle-description" data-i18n="removeImagesDescription">投稿に添付された画像と、URLプレビューのサムネイルを非表示にします。</span>
+      </span>
+      <input type="checkbox" id="toggle-image" class="switch">
+    </label>
+
+    <label class="toggle-row">
+      <span class="toggle-copy">
+        <span class="toggle-label" data-i18n="hideReposts">リポストを非表示</span>
+        <span class="toggle-description" data-i18n="hideRepostsDescription">リポストされた投稿をタイムラインから隠します。</span>
+      </span>
+      <input type="checkbox" id="toggle-repost" class="switch">
+    </label>
+
+    <label class="toggle-row">
+      <span class="toggle-copy">
+        <span class="toggle-label" data-i18n="hideKeywordMatches">キーワードを含む投稿を非表示</span>
+        <span class="toggle-description" data-i18n="hideKeywordMatchesDescription">登録したキーワードや正規表現に一致する投稿を隠します。</span>
+      </span>
+      <input type="checkbox" id="toggle-keyword" class="switch">
+    </label>
+
+    <label class="toggle-row">
+      <span class="toggle-copy">
+        <span class="toggle-label" data-i18n="expandShowMore">「もっと見る」を自動展開</span>
+        <span class="toggle-description" data-i18n="expandShowMoreDescription">長い投稿の「もっと見る」を初めから開いた状態にします。</span>
+      </span>
+      <input type="checkbox" id="toggle-expand-more" class="switch">
+    </label>
+
+    <div class="toggle-row toggle-row-cicada">
+      <span class="toggle-copy">
+        <span class="toggle-label" data-i18n="focusTimeline">蝉モード</span>
+        <span class="toggle-description" data-i18n="zennmodeDescription">Lv1: サイドメニューを非表示。Lv2: ボタンや数字も含めて全て非表示。</span>
+      </span>
+      <div class="segmented" role="radiogroup" aria-label="蝉モード">
+        <input type="radio" name="cicada-level" id="cicada-0" value="0">
+        <label class="segmented-btn" for="cicada-0" data-i18n="cicadaOff">オフ</label>
+        <input type="radio" name="cicada-level" id="cicada-1" value="1">
+        <label class="segmented-btn" for="cicada-1" data-i18n="cicadaLv1">Lv1</label>
+        <input type="radio" name="cicada-level" id="cicada-2" value="2">
+        <label class="segmented-btn" for="cicada-2" data-i18n="cicadaLv2">Lv2</label>
+      </div>
+    </div>
+  </section>
+
+  <section class="keyword-section" id="keyword-section">
+    <div class="keyword-header">
+      <span data-i18n="hiddenKeywords">非表示キーワード</span>
+      <span class="keyword-count" id="keyword-count">0件</span>
+    </div>
+
+    <p class="toggle-description keyword-section-description" data-i18n="hiddenKeywordsDescription">キーワードにヒットしたポストは表示されなくなります。</p>
+
+    <div class="keyword-input-row">
+      <input
+        type="text"
+        id="keyword-input"
+        placeholder="キーワードまたは /正規表現/"
+        data-i18n-placeholder="keywordPlaceholder"
+        autocomplete="off"
+      >
+      <button id="keyword-add" type="button" data-i18n="add">追加</button>
+    </div>
+
+    <p class="keyword-error" id="keyword-error"></p>
+
+    <ul class="keyword-list" id="keyword-list"></ul>
+  </section>
+
+  <section class="bookmark-section">
+    <button id="open-bookmarks" type="button" class="bookmark-link" aria-label="保存した投稿を開く" data-i18n-aria-label="openSavedPosts">
+      <span class="bookmark-link-text" data-i18n="savedPosts">保存した投稿</span>
+      <span class="bookmark-link-meta">
+        <span id="bookmark-count">0件</span>
+        <span class="bookmark-chevron" aria-hidden="true">&gt;</span>
+      </span>
+    </button>
+  </section>
+
+  <p class="note">
+    <span><span data-i18n="shortcutLabel">ショートカット:</span> <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd></span>
+  </p>
+
+  <script type="module" src="./popup.ts"></script>
+</body>
+</html>

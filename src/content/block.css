@@ -1,0 +1,160 @@
+/*
+ * 各機能は <html> に付与されるクラスで ON/OFF。
+ *  - xf-hover-on     : ホバーカード非表示
+ *  - xf-video-on     : 動画要素を即時非表示（領域削除は block.js）
+ *  - xf-image-on     : 画像/カードサムネイルを非表示
+ *  - xf-cicada-on    : 蝉モード Lv1 以上（サイドメニュー類を非表示）
+ *  - xf-cicada-lv2   : 蝉モード Lv2（ボタン・数字・コンポーザー等もすべて非表示）
+ *  - xf-detail-page  : 現在のURLが /status/ を含む詳細ページ（block.jsで付与）
+ */
+
+html.xf-hover-on [data-testid="HoverCard"],
+html.xf-hover-on [data-testid="hoverCard"] {
+  display: none !important;
+}
+
+html.xf-video-on [data-testid="videoPlayer"],
+html.xf-video-on [data-testid="videoComponent"],
+html.xf-video-on [data-testid="previewInterstitial"] {
+  display: none !important;
+}
+
+html.xf-image-on [data-testid="tweetPhoto"],
+html.xf-image-on [data-testid="card.wrapper"],
+html.xf-image-on [data-testid="card.layoutLarge.media"],
+html.xf-image-on [data-testid="card.layoutSmall.media"] {
+  display: none !important;
+}
+
+/* ====================================================
+ * 蝉モード Lv1（サイドメニュー類のみ非表示）
+ * Lv2 は xf-cicada-on と xf-cicada-lv2 が両方付くので Lv1 のルールも継承される。
+ * ==================================================== */
+
+/* 左サイドバー：visibility: hidden でスペース確保→タイムライン位置維持 */
+html.xf-cicada-on header[role="banner"] {
+  visibility: hidden !important;
+}
+
+/* 右サイドバー、aside、DMドロワー */
+html.xf-cicada-on [data-testid="sidebarColumn"],
+html.xf-cicada-on aside,
+html.xf-cicada-on [data-testid="DMDrawerHeader"],
+html.xf-cicada-on [data-testid="DMDrawer"] {
+  display: none !important;
+}
+
+/* Grok ドロワー / 浮動ボタン（aside 外の浮動UIもサイドメニュー扱いで消す） */
+html.xf-cicada-on [aria-label*="Grok" i],
+html.xf-cicada-on a[href="/i/grok"],
+html.xf-cicada-on a[href^="/i/grok/"],
+html.xf-cicada-on [data-testid*="Grok" i],
+html.xf-cicada-on div:has(> [data-testid*="Grok" i]),
+html.xf-cicada-on div:has(> div > [data-testid*="Grok" i]),
+html.xf-cicada-on div:has(> div > div > [data-testid*="Grok" i]) {
+  display: none !important;
+}
+
+/* ====================================================
+ * 蝉モード Lv2（ボタン・数値・コンポーザー等もすべて非表示）
+ * ==================================================== */
+
+/*
+ * タイムラインの "What's happening?" インラインコンポーザーのみ非表示。
+ *
+ * 構造マッチで判定：
+ *   - tweetTextarea_0 を含む cellInnerDiv のうち
+ *   - article を含まない（= 既存ツイート本体を含まない）ものだけ
+ *
+ * これで詳細ページで元ツイート (article) と同じセルにリプライ入力欄が
+ * 同居していても、article を含む側は巻き添えにならない。
+ */
+html.xf-cicada-lv2
+[data-testid="cellInnerDiv"]:has([data-testid="tweetTextarea_0"]):not(:has(article)) {
+  display: none !important;
+}
+
+/* ユーザーID（@handle）+ 投稿時刻の行を非表示 */
+html.xf-cicada-lv2 [data-testid="cellInnerDiv"] [data-testid="User-Name"] > div:nth-child(2) {
+  display: none !important;
+}
+
+html.xf-cicada-lv2 [data-testid="cellInnerDiv"] time {
+  display: none !important;
+}
+
+/* リプライ数・リポスト数・いいね数（数値だけ） */
+html.xf-cicada-lv2 [data-testid="cellInnerDiv"]
+  [role="group"]
+  [data-testid="app-text-transition-container"] {
+  display: none !important;
+}
+
+/* 表示回数（analyticsリンク） */
+html.xf-cicada-lv2 [data-testid="cellInnerDiv"] a[href$="/analytics"] {
+  display: none !important;
+}
+
+/*
+ * 蝉モード Lv2 × タイムラインのみ：アクションバー全体と三点リーダー(caret)を非表示。
+ * /status/ を含む詳細ページでは表示する。
+ */
+html.xf-cicada-lv2:not(.xf-detail-page) [data-testid="cellInnerDiv"]
+  [role="group"]:has([data-testid="like"], [data-testid="unlike"]),
+html.xf-cicada-lv2:not(.xf-detail-page) [data-testid="cellInnerDiv"] [data-testid="caret"] {
+  display: none !important;
+}
+
+html.xf-cicada-lv2.xf-detail-page .xf-bookmark-btn {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* ====================================================
+ * ブックマークボタン（X タイムラインのアクションバー内）
+ * ==================================================== */
+.xf-bookmark-btn {
+  background: transparent;
+  border: none;
+  color: rgb(113, 118, 123);
+  cursor: pointer;
+  padding: 0;
+  margin: 0 0 0 4px;
+  border-radius: 9999px;
+  line-height: 0;
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.xf-bookmark-icon {
+  display: block;
+  width: 19px;
+  height: 19px;
+  flex: none;
+  pointer-events: none;
+}
+
+.xf-bookmark-btn:hover {
+  background-color: rgba(29, 155, 240, 0.1);
+  color: rgb(29, 155, 240);
+}
+
+.xf-bookmark-btn.xf-saved {
+  color: rgb(29, 155, 240);
+}
+
+.xf-bookmark-btn.xf-saved:hover {
+  background-color: rgba(244, 33, 46, 0.1);
+  color: rgb(244, 33, 46);
+}

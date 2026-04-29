@@ -1,0 +1,28 @@
+{
+  "name": "quiet-x",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Quiet X — X (Twitter) を静かに使うための Chrome 拡張機能",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
+    "check": "biome check --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.13",
+    "@crxjs/vite-plugin": "^2.4.0",
+    "@types/chrome": "^0.1.40",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.10"
+  },
+  "overrides": {
+    "@crxjs/vite-plugin": {
+      "rollup": "^4.60.2"
+    }
+  }
+}

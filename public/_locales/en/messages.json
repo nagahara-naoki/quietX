@@ -1,0 +1,22 @@
+{
+  "appName": {
+    "message": "Quiet X",
+    "description": "Extension name"
+  },
+  "appShortName": {
+    "message": "Quiet X",
+    "description": "Short extension name"
+  },
+  "appDescription": {
+    "message": "Hide hover cards, videos, reposts, keyword-matched posts, and distractions on X. Includes local bookmarks and zennmode.",
+    "description": "Chrome Web Store and extension management description"
+  },
+  "actionTitle": {
+    "message": "Quiet X",
+    "description": "Toolbar button title"
+  },
+  "commandOpenPopup": {
+    "message": "Open Quiet X",
+    "description": "Keyboard shortcut command description"
+  }
+}

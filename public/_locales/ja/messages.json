@@ -1,0 +1,22 @@
+{
+  "appName": {
+    "message": "Quiet X",
+    "description": "Extension name"
+  },
+  "appShortName": {
+    "message": "Quiet X",
+    "description": "Short extension name"
+  },
+  "appDescription": {
+    "message": "X\u306e\u30db\u30d0\u30fc\u30ab\u30fc\u30c9\u3001\u52d5\u753b\u3001\u30ea\u30dd\u30b9\u30c8\u3001\u30ad\u30fc\u30ef\u30fc\u30c9\u4e00\u81f4\u6295\u7a3f\u3092\u975e\u8868\u793a\u306b\u3057\u3001\u30ed\u30fc\u30ab\u30eb\u4fdd\u5b58\u3068\u8749\u30e2\u30fc\u30c9\u3092\u8ffd\u52a0\u3057\u307e\u3059\u3002",
+    "description": "Chrome Web Store and extension management description"
+  },
+  "actionTitle": {
+    "message": "Quiet X",
+    "description": "Toolbar button title"
+  },
+  "commandOpenPopup": {
+    "message": "Quiet X\u3092\u958b\u304f",
+    "description": "Keyboard shortcut command description"
+  }
+}
