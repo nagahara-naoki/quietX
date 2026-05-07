@@ -9,7 +9,13 @@ import {
 } from './shared/i18n';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings } from './shared/settings';
 import type { BookmarkMap, Settings } from './shared/types';
-import { KEYWORD_PATTERN_RE, normalizeCicadaLevel } from './shared/util';
+import {
+  KEYWORD_PATTERN_RE,
+  MAX_LONG_POST_THRESHOLD,
+  MIN_LONG_POST_THRESHOLD,
+  normalizeCicadaLevel,
+  normalizeLongPostThreshold
+} from './shared/util';
 
 /* ============================================================================
  * 状態
@@ -31,8 +37,11 @@ type ToggleSetting =
   | 'hideVideos'
   | 'hideImages'
   | 'hideReposts'
+  | 'hideUrlPosts'
   | 'expandShowMore'
   | 'hideKeywords'
+  | 'hideLongPostAccounts'
+  | 'enableBookmarks'
   | 'showDescriptions';
 
 interface ToggleDef {
@@ -46,8 +55,11 @@ const TOGGLES: ToggleDef[] = [
   { id: 'toggle-video', setting: 'hideVideos' },
   { id: 'toggle-image', setting: 'hideImages' },
   { id: 'toggle-repost', setting: 'hideReposts' },
+  { id: 'toggle-url', setting: 'hideUrlPosts' },
   { id: 'toggle-expand-more', setting: 'expandShowMore' },
   { id: 'toggle-keyword', setting: 'hideKeywords', rerender: true },
+  { id: 'toggle-longpost', setting: 'hideLongPostAccounts', rerender: true },
+  { id: 'toggle-bookmarks', setting: 'enableBookmarks' },
   { id: 'toggle-descriptions', setting: 'showDescriptions', rerender: true }
 ];
 
@@ -85,7 +97,8 @@ const els = {
   keywordCount: byId<HTMLElement>('keyword-count'),
   keywordError: byId<HTMLElement>('keyword-error'),
   openBookmarks: byId<HTMLButtonElement>('open-bookmarks'),
-  bookmarkCount: byId<HTMLElement>('bookmark-count')
+  bookmarkCount: byId<HTMLElement>('bookmark-count'),
+  longPostThreshold: byId<HTMLInputElement>('longpost-threshold')
 };
 
 /* ============================================================================
@@ -176,6 +189,12 @@ function render(): void {
 
   els.keywordSection.classList.toggle('disabled', !state.hideKeywords);
   els.keywordCount.textContent = formatCount(state.keywords.length);
+
+  // 長文しきい値: ストレージから読み出した正規化済み値を反映
+  els.longPostThreshold.value = String(state.longPostThreshold);
+  els.longPostThreshold.disabled = !state.hideLongPostAccounts;
+  els.longPostThreshold.min = String(MIN_LONG_POST_THRESHOLD);
+  els.longPostThreshold.max = String(MAX_LONG_POST_THRESHOLD);
 
   els.keywordList.innerHTML = '';
   if (state.keywords.length === 0) {
@@ -285,6 +304,28 @@ els.keywordInput.addEventListener('keydown', (e) => {
 els.keywordInput.addEventListener('input', () => {
   // 入力再開でエラー表示をクリア
   if (els.keywordError.textContent) showError('');
+});
+
+function commitLongPostThreshold(): void {
+  const next = normalizeLongPostThreshold(els.longPostThreshold.value);
+  if (next === state.longPostThreshold) {
+    // 入力中の不正値（空欄等）を表示上だけ正規化値に戻す
+    els.longPostThreshold.value = String(next);
+    return;
+  }
+  state.longPostThreshold = next;
+  els.longPostThreshold.value = String(next);
+  persistState();
+}
+
+els.longPostThreshold.addEventListener('change', commitLongPostThreshold);
+els.longPostThreshold.addEventListener('blur', commitLongPostThreshold);
+els.longPostThreshold.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    commitLongPostThreshold();
+    els.longPostThreshold.blur();
+  }
 });
 
 els.openBookmarks.addEventListener('click', () => {

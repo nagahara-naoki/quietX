@@ -36,7 +36,7 @@
 
     <label class="toggle-row">
       <span class="toggle-copy">
-        <span class="toggle-label" data-i18n="removeVideos">動画をタイムラインから削除</span>
+        <span class="toggle-label" data-i18n="removeVideos">動画をタイムラインから非表示</span>
         <span class="toggle-description" data-i18n="removeVideosDescription">タイムライン上の動画枠を非表示にします。</span>
       </span>
       <input type="checkbox" id="toggle-video" class="switch">
@@ -44,7 +44,7 @@
 
     <label class="toggle-row">
       <span class="toggle-copy">
-        <span class="toggle-label" data-i18n="removeImages">画像をタイムラインから削除</span>
+        <span class="toggle-label" data-i18n="removeImages">画像をタイムラインから非表示</span>
         <span class="toggle-description" data-i18n="removeImagesDescription">投稿に添付された画像と、URLプレビューのサムネイルを非表示にします。</span>
       </span>
       <input type="checkbox" id="toggle-image" class="switch">
@@ -60,11 +60,31 @@
 
     <label class="toggle-row">
       <span class="toggle-copy">
+        <span class="toggle-label" data-i18n="hideUrlPosts">URLを含む投稿を非表示</span>
+        <span class="toggle-description" data-i18n="hideUrlPostsDescription">外部リンクやURLプレビューカードを含む投稿（アフィリエイトや誘導投稿など）を隠します。</span>
+      </span>
+      <input type="checkbox" id="toggle-url" class="switch">
+    </label>
+
+    <label class="toggle-row">
+      <span class="toggle-copy">
         <span class="toggle-label" data-i18n="hideKeywordMatches">キーワードを含む投稿を非表示</span>
         <span class="toggle-description" data-i18n="hideKeywordMatchesDescription">登録したキーワードや正規表現に一致する投稿を隠します。</span>
       </span>
       <input type="checkbox" id="toggle-keyword" class="switch">
     </label>
+
+    <div class="toggle-row toggle-row-longpost">
+      <span class="toggle-copy">
+        <span class="toggle-label" data-i18n="hideLongPostAccounts">文字数で投稿を非表示</span>
+        <span class="toggle-description" data-i18n="hideLongPostAccountsDescription">指定文字数を超える投稿を見つけたら、そのアカウントの投稿をすべてタイムラインから隠します。</span>
+        <span class="longpost-threshold-row">
+          <input type="number" id="longpost-threshold" class="longpost-threshold-input" min="1" max="100000" step="1" inputmode="numeric" aria-labelledby="longpost-threshold-suffix">
+          <span class="longpost-threshold-suffix" id="longpost-threshold-suffix" data-i18n="longPostThresholdSuffix">文字以上</span>
+        </span>
+      </span>
+      <input type="checkbox" id="toggle-longpost" class="switch">
+    </div>
 
     <label class="toggle-row">
       <span class="toggle-copy">
@@ -72,6 +92,14 @@
         <span class="toggle-description" data-i18n="expandShowMoreDescription">長い投稿の「もっと見る」を初めから開いた状態にします。</span>
       </span>
       <input type="checkbox" id="toggle-expand-more" class="switch">
+    </label>
+
+    <label class="toggle-row">
+      <span class="toggle-copy">
+        <span class="toggle-label" data-i18n="enableBookmarks">投稿の保存を有効化</span>
+        <span class="toggle-description" data-i18n="enableBookmarksDescription">各投稿の右下に★ボタンを表示し、Quiet Xにローカル保存できるようにします。</span>
+      </span>
+      <input type="checkbox" id="toggle-bookmarks" class="switch">
     </label>
 
     <div class="toggle-row toggle-row-cicada">

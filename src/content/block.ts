@@ -9,6 +9,13 @@ import { DEFAULT_SETTINGS, loadSettings } from '../shared/settings';
 import type { Bookmark, BookmarkMap, Settings } from '../shared/types';
 import { KEYWORD_PATTERN_RE, normalizeCicadaLevel } from '../shared/util';
 
+/**
+ * 「長文を投稿したアカウントを非表示」機能で、これまでに長文を投稿したと
+ * 判定したハンドル（"@name"）の集合。同一セッション中は持ち越して、
+ * 後から流れてきた同アカウントの短い投稿も連動して非表示にする。
+ */
+const longPostBannedHandles = new Set<string>();
+
 /* ============================================================================
  * 状態
  * ========================================================================= */
@@ -31,6 +38,8 @@ const ARTICLE_SELECTOR = 'article[role="article"]';
 
 const ATTR_SHOW_MORE_CLICKED = 'data-xf-showmore-clicked';
 const ATTR_BM_BUTTON = 'data-xf-bm-button';
+const ATTR_LONGPOST_CHECKED = 'data-xf-longpost-checked';
+const ATTR_LONGPOST_HIDDEN = 'data-xf-longpost-hidden';
 
 /** 日本語UIでもリポスト判定が効くよう両言語のラベルを並べる。 */
 const REPOST_TEXT_RE = /リポスト|リツイート|reposted|retweeted/i;
@@ -166,14 +175,62 @@ function cellMatchesKeyword(cell: HTMLElement): boolean {
   return tweetMatchesKeyword(tweet.textContent ?? '');
 }
 
+/**
+ * セル内の article から投稿者ハンドル（"@name"）を取り出す。
+ * `extractTweetData` と同じく `data-testid="User-Name"` のテキストを
+ * `@` と `·` で分解する単純なパース。リポストの場合は `socialContext` で
+ * 表示名が前置されるが、`User-Name` 自体は元投稿者のハンドルを含む。
+ */
+function getCellHandle(cell: HTMLElement): string | null {
+  const userEl = cell.querySelector<HTMLElement>('[data-testid="User-Name"]');
+  if (!userEl) return null;
+  const fullText = userEl.textContent ?? '';
+  const atIdx = fullText.indexOf('@');
+  if (atIdx < 0) return null;
+  const rest = fullText.substring(atIdx);
+  const dotIdx = rest.indexOf('·');
+  const handle = (dotIdx > 0 ? rest.substring(0, dotIdx) : rest).trim();
+  return handle.length > 1 ? handle : null;
+}
+
+/**
+ * 投稿本文の文字数を取り出す。「もっと見る」で折り畳まれている投稿は
+ * 必ず長文なので、本文の長さに関わらず長文扱いにする。
+ */
+function getCellPostLength(cell: HTMLElement): number {
+  const textEl = cell.querySelector<HTMLElement>('[data-testid="tweetText"]');
+  const text = textEl?.textContent ?? '';
+  const hasShowMore = !!cell.querySelector(SHOW_MORE_SELECTOR);
+  // 折り畳み中の投稿は本文長を Number.MAX_SAFE_INTEGER 扱いとし、
+  // 必ずしきい値を超える
+  return hasShowMore ? Number.MAX_SAFE_INTEGER : text.length;
+}
+
 function cellIsRepost(cell: HTMLElement): boolean {
   const sc = cell.querySelector<HTMLElement>('[data-testid="socialContext"]');
   if (!sc) return false;
   return REPOST_TEXT_RE.test(sc.textContent ?? '');
 }
 
+/**
+ * 外部URLを含む投稿か判定する。
+ * X は本文中の外部リンクを `<a href="https://t.co/...">` で包み、
+ * URL プレビューは `[data-testid="card.wrapper"]` として描画する。
+ * @mention や #hashtag は `href="/..."` で始まる相対リンクなので除外できる。
+ */
+function cellHasExternalUrl(cell: HTMLElement): boolean {
+  const tweetText = cell.querySelector<HTMLElement>('[data-testid="tweetText"]');
+  if (tweetText) {
+    for (const a of tweetText.querySelectorAll('a')) {
+      const href = a.getAttribute('href') ?? '';
+      if (/^https?:\/\//i.test(href)) return true;
+    }
+  }
+  return !!cell.querySelector('[data-testid="card.wrapper"]');
+}
+
 interface CellHider {
-  settingKey: keyof Pick<Settings, 'hideKeywords' | 'hideReposts'>;
+  settingKey: keyof Pick<Settings, 'hideKeywords' | 'hideReposts' | 'hideUrlPosts'>;
   hiddenAttr: string;
   matches: (cell: HTMLElement) => boolean;
   /** true を返したらヒット判定全体をスキップ（例: コンパイル済みキーワードが空のとき）。 */
@@ -191,6 +248,11 @@ const CELL_HIDERS: CellHider[] = [
     settingKey: 'hideReposts',
     hiddenAttr: 'data-xf-repost-hidden',
     matches: cellIsRepost
+  },
+  {
+    settingKey: 'hideUrlPosts',
+    hiddenAttr: 'data-xf-url-hidden',
+    matches: cellHasExternalUrl
   }
 ];
 
@@ -215,6 +277,57 @@ function refreshCellHides(cfg: CellHider): void {
     }
   });
   hideMatchingCells(cfg);
+}
+
+/* ============================================================================
+ * 長文を投稿したアカウントを非表示
+ *
+ * 2 段階のスキャン:
+ *   1) 未チェックのセルから本文長を取り出し、しきい値を超えるものは
+ *      投稿者ハンドルを `longPostBannedHandles` に追加する。
+ *   2) ハンドルが BAN セットに入っているセルを `display:none`。
+ *
+ * `data-xf-longpost-checked` で同じセルを何度も計測しないよう抑止する。
+ * しきい値や ON/OFF が変わったときは `resetLongPostState` で全リセット。
+ * ========================================================================= */
+
+function resetLongPostState(): void {
+  longPostBannedHandles.clear();
+  document.querySelectorAll<HTMLElement>(`[${ATTR_LONGPOST_CHECKED}]`).forEach((el) => {
+    el.removeAttribute(ATTR_LONGPOST_CHECKED);
+  });
+  document.querySelectorAll<HTMLElement>(`[${ATTR_LONGPOST_HIDDEN}]`).forEach((el) => {
+    el.style.display = '';
+    el.removeAttribute(ATTR_LONGPOST_HIDDEN);
+  });
+}
+
+function applyLongPostHides(): void {
+  if (!settings.hideLongPostAccounts) return;
+  const threshold = settings.longPostThreshold;
+  const cells = document.querySelectorAll<HTMLElement>(TWEET_CELL_SELECTOR);
+
+  // pass 1: 新たに見つかった長文の投稿者をハンドル集合へ追加
+  cells.forEach((cell) => {
+    if (cell.hasAttribute(ATTR_LONGPOST_CHECKED)) return;
+    const handle = getCellHandle(cell);
+    if (!handle) return;
+    cell.setAttribute(ATTR_LONGPOST_CHECKED, '1');
+    if (getCellPostLength(cell) >= threshold) {
+      longPostBannedHandles.add(handle);
+    }
+  });
+
+  // pass 2: BAN リストにあるアカウントの投稿を非表示
+  if (longPostBannedHandles.size === 0) return;
+  cells.forEach((cell) => {
+    if (cell.hasAttribute(ATTR_LONGPOST_HIDDEN)) return;
+    const handle = getCellHandle(cell);
+    if (handle && longPostBannedHandles.has(handle)) {
+      cell.style.display = 'none';
+      cell.setAttribute(ATTR_LONGPOST_HIDDEN, '1');
+    }
+  });
 }
 
 /* ============================================================================
@@ -386,6 +499,13 @@ function injectBookmarkButtons(): void {
   });
 }
 
+/** トグルが OFF になったとき、注入済みの★ボタンを DOM から取り除く。 */
+function removeBookmarkButtons(): void {
+  document.querySelectorAll<HTMLElement>(`[${ATTR_BM_BUTTON}]`).forEach((btn) => {
+    btn.remove();
+  });
+}
+
 /* ============================================================================
  * 適用フロー
  *
@@ -399,9 +519,14 @@ function applyAll(): void {
   applyClassToggles();
   applyMediaHiders();
   CELL_HIDERS.forEach(refreshCellHides);
+  applyLongPostHides();
   if (settings.expandShowMore) expandShowMoreLinks();
-  injectBookmarkButtons();
-  refreshBookmarkButtonLabels();
+  if (settings.enableBookmarks) {
+    injectBookmarkButtons();
+    refreshBookmarkButtonLabels();
+  } else {
+    removeBookmarkButtons();
+  }
 }
 
 let scheduled = false;
@@ -413,8 +538,9 @@ function scheduleIncremental(): void {
     updatePageType();
     applyMediaHiders(true);
     CELL_HIDERS.forEach(hideMatchingCells);
+    applyLongPostHides();
     if (settings.expandShowMore) expandShowMoreLinks();
-    injectBookmarkButtons();
+    if (settings.enableBookmarks) injectBookmarkButtons();
   });
 }
 
@@ -432,6 +558,11 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     // 設定キーが変わったときだけ全件再取得して正規化する
     const touchesSettings = Object.keys(changes).some((key) => key in DEFAULT_SETTINGS);
     if (!touchesSettings) return;
+    // 長文 BAN は「これまで観測した本文」に依存するため、関連設定が動いた
+    // ときは状態を捨てて再スキャンさせる
+    const touchesLongPost =
+      'hideLongPostAccounts' in changes || 'longPostThreshold' in changes;
+    if (touchesLongPost) resetLongPostState();
     void loadSettings().then((next) => {
       settings = next;
       messages = getMessages(normalizeLanguage(settings.language));

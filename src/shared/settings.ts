@@ -1,6 +1,6 @@
 import { DEFAULT_LANGUAGE } from './i18n';
 import type { Settings } from './types';
-import { normalizeCicadaLevel } from './util';
+import { normalizeCicadaLevel, normalizeLongPostThreshold } from './util';
 
 /**
  * 設定の既定値。`chrome.storage.sync` から読み出すときに第二引数として渡し、
@@ -13,7 +13,11 @@ export const DEFAULT_SETTINGS: Settings = {
   hideKeywords: true,
   keywords: [],
   hideReposts: false,
+  hideUrlPosts: false,
+  hideLongPostAccounts: false,
+  longPostThreshold: 280,
   expandShowMore: false,
+  enableBookmarks: false,
   cicadaMode: 0,
   showDescriptions: false,
   language: DEFAULT_LANGUAGE
@@ -26,6 +30,7 @@ export const DEFAULT_SETTINGS: Settings = {
 export function normalizeSettings(raw: Partial<Settings> | null | undefined): Settings {
   const merged: Settings = { ...DEFAULT_SETTINGS, ...(raw ?? {}) };
   merged.cicadaMode = normalizeCicadaLevel(merged.cicadaMode);
+  merged.longPostThreshold = normalizeLongPostThreshold(merged.longPostThreshold);
   return merged;
 }
 

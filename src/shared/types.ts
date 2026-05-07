@@ -20,7 +20,11 @@ export interface Settings {
   hideKeywords: boolean;
   keywords: string[];
   hideReposts: boolean;
+  hideUrlPosts: boolean;
+  hideLongPostAccounts: boolean;
+  longPostThreshold: number;
   expandShowMore: boolean;
+  enableBookmarks: boolean;
   cicadaMode: CicadaLevel;
   showDescriptions: boolean;
   language: Language;
