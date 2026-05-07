@@ -1,6 +1,6 @@
 {
   "name": "quiet-x",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Quiet X — X (Twitter) を静かに使うための Chrome 拡張機能",
   "type": "module",
