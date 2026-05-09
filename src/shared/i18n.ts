@@ -11,6 +11,15 @@ export const MESSAGES = {
     languageJapanese: '日本語',
     languageEnglish: 'English',
     showDescriptions: '説明を表示',
+    disableAll: 'Quiet X を一時停止',
+    disableAllDescription:
+      'オンにしている間、Quiet X の機能を全て一時停止します。設定はそのまま保持されます。',
+    filterScope: '適用範囲',
+    filterScopeDescription:
+      'フィルタを「おすすめ」「フォロー中」のどちらのタブに効かせるかを選びます。',
+    scopeBoth: '両方',
+    scopeForYou: 'おすすめ',
+    scopeFollowing: 'フォロー中',
     hideHoverCards: 'ホバーカードを非表示',
     hideHoverCardsDescription: 'プロフィールなどのホバーカードを開かないようにします。',
     removeVideos: '動画をタイムラインから非表示',
@@ -31,7 +40,8 @@ export const MESSAGES = {
     expandShowMore: '「もっと見る」を自動展開',
     expandShowMoreDescription: '長い投稿の「もっと見る」を初めから開いた状態にします。',
     enableBookmarks: '投稿の保存を有効化',
-    enableBookmarksDescription: '各投稿の右下に★ボタンを表示し、Quiet Xにローカル保存できるようにします。',
+    enableBookmarksDescription:
+      '各投稿の右下に★ボタンを表示し、Quiet Xにローカル保存できるようにします。',
     focusTimeline: '蝉モード',
     zennmodeDescription: 'Lv1: サイドメニューを非表示。Lv2: ボタンや数字も含めて全て非表示。',
     cicadaOff: 'オフ',
@@ -74,6 +84,15 @@ export const MESSAGES = {
     languageJapanese: '日本語',
     languageEnglish: 'English',
     showDescriptions: 'Show descriptions',
+    disableAll: 'Pause Quiet X',
+    disableAllDescription:
+      'Temporarily suspends all Quiet X features. Your settings are preserved and resume instantly when toggled off.',
+    filterScope: 'Apply to',
+    filterScopeDescription:
+      'Choose which tab the filters should apply to: "For you" or "Following".',
+    scopeBoth: 'Both',
+    scopeForYou: 'For you',
+    scopeFollowing: 'Following',
     hideHoverCards: 'Hide hover cards',
     hideHoverCardsDescription: 'Stops profile hover cards from opening over the timeline.',
     removeVideos: 'Remove videos from timeline',
@@ -94,7 +113,8 @@ export const MESSAGES = {
     expandShowMore: 'Auto-expand "Show more"',
     expandShowMoreDescription: 'Expands long posts hidden behind "Show more" automatically.',
     enableBookmarks: 'Enable post saving',
-    enableBookmarksDescription: 'Adds a star button to each post so you can save it locally to Quiet X.',
+    enableBookmarksDescription:
+      'Adds a star button to each post so you can save it locally to Quiet X.',
     focusTimeline: 'zennmode',
     zennmodeDescription: 'Lv1: hide side menus. Lv2: also hide buttons, counts, and composer.',
     cicadaOff: 'Off',

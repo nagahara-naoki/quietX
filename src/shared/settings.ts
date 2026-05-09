@@ -1,6 +1,6 @@
 import { DEFAULT_LANGUAGE } from './i18n';
 import type { Settings } from './types';
-import { normalizeCicadaLevel, normalizeLongPostThreshold } from './util';
+import { normalizeCicadaLevel, normalizeFilterScope, normalizeLongPostThreshold } from './util';
 
 /**
  * 設定の既定値。`chrome.storage.sync` から読み出すときに第二引数として渡し、
@@ -20,7 +20,9 @@ export const DEFAULT_SETTINGS: Settings = {
   enableBookmarks: false,
   cicadaMode: 0,
   showDescriptions: false,
-  language: DEFAULT_LANGUAGE
+  language: DEFAULT_LANGUAGE,
+  filterScope: 'both',
+  disableAll: false
 };
 
 /**
@@ -31,6 +33,7 @@ export function normalizeSettings(raw: Partial<Settings> | null | undefined): Se
   const merged: Settings = { ...DEFAULT_SETTINGS, ...(raw ?? {}) };
   merged.cicadaMode = normalizeCicadaLevel(merged.cicadaMode);
   merged.longPostThreshold = normalizeLongPostThreshold(merged.longPostThreshold);
+  merged.filterScope = normalizeFilterScope(merged.filterScope);
   return merged;
 }
 

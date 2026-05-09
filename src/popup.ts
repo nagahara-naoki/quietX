@@ -14,6 +14,7 @@ import {
   MAX_LONG_POST_THRESHOLD,
   MIN_LONG_POST_THRESHOLD,
   normalizeCicadaLevel,
+  normalizeFilterScope,
   normalizeLongPostThreshold
 } from './shared/util';
 
@@ -42,7 +43,8 @@ type ToggleSetting =
   | 'hideKeywords'
   | 'hideLongPostAccounts'
   | 'enableBookmarks'
-  | 'showDescriptions';
+  | 'showDescriptions'
+  | 'disableAll';
 
 interface ToggleDef {
   id: string;
@@ -51,6 +53,7 @@ interface ToggleDef {
 }
 
 const TOGGLES: ToggleDef[] = [
+  { id: 'toggle-disable-all', setting: 'disableAll', rerender: true },
   { id: 'toggle-hover', setting: 'hideHoverCard' },
   { id: 'toggle-video', setting: 'hideVideos' },
   { id: 'toggle-image', setting: 'hideImages' },
@@ -65,9 +68,6 @@ const TOGGLES: ToggleDef[] = [
 
 /* ============================================================================
  * DOM 参照
- *
- * 起動時に一度だけ取得する。getElementById 結果は null 許容なので
- * 「無いと困るもの」は `byId<T>` で投げて素朴に扱う。
  * ========================================================================= */
 
 function byId<T extends HTMLElement>(id: string): T {
@@ -76,8 +76,6 @@ function byId<T extends HTMLElement>(id: string): T {
   return el as T;
 }
 
-// Record<ToggleSetting, …> にすることで `toggleEls[setting]` の戻り値が
-// `HTMLInputElement` に確定し、noUncheckedIndexedAccess に引っかからない。
 const toggleEls = TOGGLES.reduce(
   (acc, { id, setting }) => {
     acc[setting] = byId<HTMLInputElement>(id);
@@ -89,6 +87,7 @@ const toggleEls = TOGGLES.reduce(
 const els = {
   ...toggleEls,
   cicadaRadios: document.querySelectorAll<HTMLInputElement>('input[name="cicada-level"]'),
+  scopeRadios: document.querySelectorAll<HTMLInputElement>('input[name="filter-scope"]'),
   languageSelect: byId<HTMLSelectElement>('language-select'),
   keywordSection: byId<HTMLElement>('keyword-section'),
   keywordInput: byId<HTMLInputElement>('keyword-input'),
@@ -129,7 +128,6 @@ function isRegexKeyword(kw: string): boolean {
   return KEYWORD_PATTERN_RE.test(kw);
 }
 
-/** `null` 返却 = 妥当 / 文字列返却 = エラーメッセージ。 */
 function validateRegex(kw: string): string | null {
   const m = kw.match(KEYWORD_PATTERN_RE);
   if (!m) return null;
@@ -150,7 +148,6 @@ async function loadInitialState(): Promise<void> {
 }
 
 function persistState(): void {
-  // popup は短命なので await せず投げっぱなしで OK
   void saveSettings(state);
 }
 
@@ -175,22 +172,33 @@ function showError(msg: string): void {
 function render(): void {
   applyLanguage();
 
-  // チェックボックス系
   TOGGLES.forEach(({ setting }) => {
     toggleEls[setting].checked = state[setting];
   });
 
-  // 蝉モード（ラジオセグメント）
   els.cicadaRadios.forEach((r) => {
     r.checked = Number(r.value) === state.cicadaMode;
   });
 
+  els.scopeRadios.forEach((r) => {
+    r.checked = r.value === state.filterScope;
+  });
+
   document.body.classList.toggle('show-descriptions', state.showDescriptions);
+  document.body.classList.toggle('is-paused', state.disableAll);
+
+  // 一時停止中はフィルタ系セクションをキーボード操作・フォーカスごと完全に無効化。
+  // `inert` 属性は CSS の pointer-events と違い、Tab フォーカスや Space/Enter
+  // による操作も含めて配下の要素を完全に切り離す（モダンブラウザ標準）。
+  document
+    .querySelectorAll<HTMLElement>('.scope-section, .toggles, .keyword-section')
+    .forEach((section) => {
+      section.toggleAttribute('inert', state.disableAll);
+    });
 
   els.keywordSection.classList.toggle('disabled', !state.hideKeywords);
   els.keywordCount.textContent = formatCount(state.keywords.length);
 
-  // 長文しきい値: ストレージから読み出した正規化済み値を反映
   els.longPostThreshold.value = String(state.longPostThreshold);
   els.longPostThreshold.disabled = !state.hideLongPostAccounts;
   els.longPostThreshold.min = String(MIN_LONG_POST_THRESHOLD);
@@ -284,6 +292,14 @@ els.cicadaRadios.forEach((r) => {
   });
 });
 
+els.scopeRadios.forEach((r) => {
+  r.addEventListener('change', () => {
+    if (!r.checked) return;
+    state.filterScope = normalizeFilterScope(r.value);
+    persistState();
+  });
+});
+
 els.languageSelect.addEventListener('change', () => {
   state.language = normalizeLanguage(els.languageSelect.value);
   showError('');
@@ -302,14 +318,12 @@ els.keywordInput.addEventListener('keydown', (e) => {
 });
 
 els.keywordInput.addEventListener('input', () => {
-  // 入力再開でエラー表示をクリア
   if (els.keywordError.textContent) showError('');
 });
 
 function commitLongPostThreshold(): void {
   const next = normalizeLongPostThreshold(els.longPostThreshold.value);
   if (next === state.longPostThreshold) {
-    // 入力中の不正値（空欄等）を表示上だけ正規化値に戻す
     els.longPostThreshold.value = String(next);
     return;
   }

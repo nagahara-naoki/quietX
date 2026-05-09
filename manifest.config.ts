@@ -38,6 +38,11 @@ export default defineManifest({
     _execute_action: {
       suggested_key: { default: 'Alt+Shift+X', mac: 'Alt+Shift+X' },
       description: '__MSG_commandOpenPopup__'
+    },
+    // 一時停止トグル。デフォルトキー無し（ユーザーが chrome://extensions/shortcuts
+    // で任意のキーを割り当てる方式）。
+    'toggle-pause': {
+      description: '__MSG_commandTogglePause__'
     }
   },
   content_scripts: [

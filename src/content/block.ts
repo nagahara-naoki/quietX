@@ -25,6 +25,12 @@ let messages: MessageDictionary = getMessages(settings.language);
 let compiledKeywords: CompiledKeyword[] = [];
 let bookmarkedIds = new Set<string>();
 let lastPath = '';
+/**
+ * 直近の applyAll/scheduleIncremental 時点でのフィルタ活性状態。
+ * `/home` のタブ切替で false → true / true → false が起きたとき、
+ * 既に隠してあるセルを表示に戻す/再非表示にする処理を発火させる。
+ */
+let lastFilteringActive = true;
 
 type CompiledKeyword = { type: 'regex'; pattern: RegExp } | { type: 'plain'; text: string };
 
@@ -43,6 +49,43 @@ const ATTR_LONGPOST_HIDDEN = 'data-xf-longpost-hidden';
 
 /** 日本語UIでもリポスト判定が効くよう両言語のラベルを並べる。 */
 const REPOST_TEXT_RE = /リポスト|リツイート|reposted|retweeted/i;
+
+/* ============================================================================
+ * 適用範囲（タブスコープ）判定
+ *
+ * `/home` のタブリスト（おすすめ / フォロー中）から、現在アクティブなタブを取得し、
+ * `settings.filterScope` と一致しなければフィルタ系を全停止する。
+ * ホーム以外のページ（プロフィール・検索など）はスコープ外として常時適用する。
+ * ========================================================================= */
+
+/** 「おすすめ」「フォロー中」両言語のラベルを並べる。 */
+const TAB_FORYOU_RE = /^(おすすめ|For you)$/i;
+const TAB_FOLLOWING_RE = /^(フォロー中|Following)$/i;
+
+function getCurrentHomeTab(): 'foryou' | 'following' | null {
+  if (location.pathname !== '/home') return null;
+  const tabs = document.querySelectorAll<HTMLElement>('[role="tablist"] [role="tab"]');
+  for (const tab of tabs) {
+    if (tab.getAttribute('aria-selected') !== 'true') continue;
+    const text = (tab.textContent ?? '').trim();
+    if (TAB_FORYOU_RE.test(text)) return 'foryou';
+    if (TAB_FOLLOWING_RE.test(text)) return 'following';
+  }
+  return null;
+}
+
+/**
+ * 現在のページ・タブで、フィルタ系（メディア / セル / 長文 / 自動展開）を
+ * 適用すべきかを返す。`disableAll` がオンのときは常に false（マスタースイッチ）。
+ * `/home` 以外、または filterScope='both' は常に true。
+ */
+function isFilteringActive(): boolean {
+  if (settings.disableAll) return false;
+  if (settings.filterScope === 'both') return true;
+  const tab = getCurrentHomeTab();
+  if (tab === null) return true;
+  return tab === settings.filterScope;
+}
 
 /* ============================================================================
  * メディア（動画・画像）非表示
@@ -110,8 +153,9 @@ function unhideMediaContainers(cfg: MediaHider): void {
  * MutationObserver の高頻度コールバックでは false（unhide）の処理が無駄なので回避。
  */
 function applyMediaHiders(incrementalOnly = false): void {
+  const filterActive = isFilteringActive();
   for (const cfg of MEDIA_HIDERS) {
-    if (settings[cfg.settingKey]) {
+    if (settings[cfg.settingKey] && filterActive) {
       hideMediaContainers(cfg);
     } else if (!incrementalOnly) {
       unhideMediaContainers(cfg);
@@ -258,6 +302,7 @@ const CELL_HIDERS: CellHider[] = [
 
 function hideMatchingCells(cfg: CellHider): void {
   if (!settings[cfg.settingKey]) return;
+  if (!isFilteringActive()) return;
   if (cfg.skipWhen?.()) return;
   document.querySelectorAll<HTMLElement>(TWEET_CELL_SELECTOR).forEach((cell) => {
     if (cell.hasAttribute(cfg.hiddenAttr)) return;
@@ -268,10 +313,11 @@ function hideMatchingCells(cfg: CellHider): void {
   });
 }
 
-/** 設定 OFF か、もう条件にマッチしないセルを表示に戻してから、改めて hide を流す。 */
+/** 設定 OFF / スコープ外 / 条件にマッチしないセルを表示に戻してから、改めて hide を流す。 */
 function refreshCellHides(cfg: CellHider): void {
+  const filterActive = isFilteringActive();
   document.querySelectorAll<HTMLElement>(`[${cfg.hiddenAttr}]`).forEach((cell) => {
-    if (!settings[cfg.settingKey] || !cfg.matches(cell)) {
+    if (!settings[cfg.settingKey] || !filterActive || !cfg.matches(cell)) {
       cell.style.display = '';
       cell.removeAttribute(cfg.hiddenAttr);
     }
@@ -303,7 +349,14 @@ function resetLongPostState(): void {
 }
 
 function applyLongPostHides(): void {
-  if (!settings.hideLongPostAccounts) return;
+  // 設定 OFF / スコープ外（タブ違い）のときは、既に隠してあるセルを表示に戻して終了
+  if (!settings.hideLongPostAccounts || !isFilteringActive()) {
+    document.querySelectorAll<HTMLElement>(`[${ATTR_LONGPOST_HIDDEN}]`).forEach((el) => {
+      el.style.display = '';
+      el.removeAttribute(ATTR_LONGPOST_HIDDEN);
+    });
+    return;
+  }
   const threshold = settings.longPostThreshold;
   const cells = document.querySelectorAll<HTMLElement>(TWEET_CELL_SELECTOR);
 
@@ -348,11 +401,17 @@ function applyClassToggles(): void {
   const html = document.documentElement;
   if (!html) return;
   const lvl = normalizeCicadaLevel(settings.cicadaMode);
-  html.classList.toggle('xf-hover-on', settings.hideHoverCard);
-  html.classList.toggle('xf-video-on', settings.hideVideos);
-  html.classList.toggle('xf-image-on', settings.hideImages);
-  html.classList.toggle('xf-cicada-on', lvl >= 1);
-  html.classList.toggle('xf-cicada-lv2', lvl >= 2);
+  // 動画・画像の CSS による即時非表示はタイムラインの表示に直結するため、
+  // タブスコープ外のときは class ごと外して CSS ルールを失効させる。
+  // hideHoverCard と蝉モードは UI 抑制系なのでスコープに関わらず常時適用するが、
+  // disableAll（マスタースイッチ）が ON のときは全停止。
+  const filterActive = isFilteringActive();
+  const masterOn = !settings.disableAll;
+  html.classList.toggle('xf-hover-on', masterOn && settings.hideHoverCard);
+  html.classList.toggle('xf-video-on', settings.hideVideos && filterActive);
+  html.classList.toggle('xf-image-on', settings.hideImages && filterActive);
+  html.classList.toggle('xf-cicada-on', masterOn && lvl >= 1);
+  html.classList.toggle('xf-cicada-lv2', masterOn && lvl >= 2);
 }
 
 /* ============================================================================
@@ -517,10 +576,11 @@ function removeBookmarkButtons(): void {
 function applyAll(): void {
   updatePageType();
   applyClassToggles();
+  lastFilteringActive = isFilteringActive();
   applyMediaHiders();
   CELL_HIDERS.forEach(refreshCellHides);
   applyLongPostHides();
-  if (settings.expandShowMore) expandShowMoreLinks();
+  if (lastFilteringActive && settings.expandShowMore) expandShowMoreLinks();
   if (settings.enableBookmarks) {
     injectBookmarkButtons();
     refreshBookmarkButtonLabels();
@@ -536,10 +596,25 @@ function scheduleIncremental(): void {
   requestAnimationFrame(() => {
     scheduled = false;
     updatePageType();
+
+    // タブ切替（おすすめ ⇄ フォロー中）でフィルタ活性が反転した場合、
+    // 既に隠してある/隠したい要素を一掃する必要があるので applyAll 相当を流す。
+    const filterActive = isFilteringActive();
+    if (filterActive !== lastFilteringActive) {
+      lastFilteringActive = filterActive;
+      applyClassToggles();
+      applyMediaHiders();
+      CELL_HIDERS.forEach(refreshCellHides);
+      applyLongPostHides();
+      if (filterActive && settings.expandShowMore) expandShowMoreLinks();
+      if (settings.enableBookmarks) injectBookmarkButtons();
+      return;
+    }
+
     applyMediaHiders(true);
     CELL_HIDERS.forEach(hideMatchingCells);
     applyLongPostHides();
-    if (settings.expandShowMore) expandShowMoreLinks();
+    if (filterActive && settings.expandShowMore) expandShowMoreLinks();
     if (settings.enableBookmarks) injectBookmarkButtons();
   });
 }
@@ -560,8 +635,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     if (!touchesSettings) return;
     // 長文 BAN は「これまで観測した本文」に依存するため、関連設定が動いた
     // ときは状態を捨てて再スキャンさせる
-    const touchesLongPost =
-      'hideLongPostAccounts' in changes || 'longPostThreshold' in changes;
+    const touchesLongPost = 'hideLongPostAccounts' in changes || 'longPostThreshold' in changes;
     if (touchesLongPost) resetLongPostState();
     void loadSettings().then((next) => {
       settings = next;

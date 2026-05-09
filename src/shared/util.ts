@@ -1,4 +1,4 @@
-import type { CicadaLevel } from './types';
+import type { CicadaLevel, FilterScope } from './types';
 
 /**
  * キーワード文字列が `/pattern/flags` 形式かを判定する正規表現。
@@ -42,4 +42,12 @@ export function normalizeLongPostThreshold(value: unknown): number {
   if (n < MIN_LONG_POST_THRESHOLD) return MIN_LONG_POST_THRESHOLD;
   if (n > MAX_LONG_POST_THRESHOLD) return MAX_LONG_POST_THRESHOLD;
   return n;
+}
+
+/**
+ * `filterScope` を安全な値に丸める。未保存・不正値は 'both' にフォールバック。
+ */
+export function normalizeFilterScope(value: unknown): FilterScope {
+  if (value === 'foryou' || value === 'following') return value;
+  return 'both';
 }

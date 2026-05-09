@@ -1,8 +1,11 @@
 /**
- * バックグラウンド (service worker) の唯一の役割は「X 以外のタブでツールバー
- * アイコンを無効にする」こと。これにより別サイトでクリックしても何も
- * 起きないことが視覚的に伝わる。
+ * バックグラウンド (service worker) の役割：
+ *  1. X 以外のタブでツールバーアイコンを無効化（視覚フィードバック）
+ *  2. ユーザーが割り当てたショートカット（`toggle-pause`）で
+ *     `disableAll` 設定をトグルする
  */
+
+import { loadSettings, saveSettings } from './shared/settings';
 
 const X_HOST_RE = /^https:\/\/(x\.com|twitter\.com)(\/|$)/;
 
@@ -52,3 +55,23 @@ async function initAllTabs(): Promise<void> {
 
 chrome.runtime.onInstalled.addListener(initAllTabs);
 chrome.runtime.onStartup.addListener(initAllTabs);
+
+/* ============================================================================
+ * コマンドハンドラ（ショートカットキー）
+ *
+ * `chrome://extensions/shortcuts` でユーザーが任意のキーを割り当てる。
+ * デフォルトキーは未設定（manifest 側で suggested_key を持たない）。
+ * ========================================================================= */
+
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command !== 'toggle-pause') return;
+  try {
+    const settings = await loadSettings();
+    settings.disableAll = !settings.disableAll;
+    await saveSettings(settings);
+    // saveSettings → chrome.storage.onChanged が popup と全 X タブの content
+    // script に伝播し、それぞれが自前の再描画/再適用を行う。
+  } catch {
+    // ストレージアクセス失敗時は無視（次回コマンド受信時に再試行）
+  }
+});

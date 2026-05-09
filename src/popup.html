@@ -6,23 +6,46 @@
   <link rel="stylesheet" href="./popup.css">
 </head>
 <body>
-  <h1 data-i18n="appName">Quiet X</h1>
-
-  <section class="language-section">
-    <label class="language-row">
-      <span class="language-label" data-i18n="languageLabel">言語</span>
-      <select id="language-select" aria-label="言語" data-i18n-aria-label="languageLabel">
-        <option value="ja" data-i18n="languageJapanese">日本語</option>
-        <option value="en" data-i18n="languageEnglish">English</option>
-      </select>
-    </label>
-  </section>
+  <header class="popup-header">
+    <h1 data-i18n="appName">Quiet X</h1>
+    <select id="language-select" aria-label="言語" data-i18n-aria-label="languageLabel">
+      <option value="ja" data-i18n="languageJapanese">日本語</option>
+      <option value="en" data-i18n="languageEnglish">English</option>
+    </select>
+  </header>
 
   <section class="description-toggle-section">
     <label class="toggle-row description-toggle-row">
       <span class="toggle-label" data-i18n="showDescriptions">説明を表示</span>
       <input type="checkbox" id="toggle-descriptions" class="switch">
     </label>
+  </section>
+
+  <section class="disable-all-section">
+    <label class="toggle-row toggle-row-disable-all">
+      <span class="toggle-copy">
+        <span class="toggle-label" data-i18n="disableAll">Quiet X を一時停止</span>
+        <span class="toggle-description" data-i18n="disableAllDescription">オンにしている間、Quiet X の機能を全て一時停止します。設定はそのまま保持されます。</span>
+      </span>
+      <input type="checkbox" id="toggle-disable-all" class="switch">
+    </label>
+  </section>
+
+  <section class="scope-section">
+    <div class="toggle-row toggle-row-scope">
+      <span class="toggle-copy">
+        <span class="toggle-label" data-i18n="filterScope">適用範囲</span>
+        <span class="toggle-description" data-i18n="filterScopeDescription">フィルタを「おすすめ」「フォロー中」のどちらのタブに効かせるかを選びます。</span>
+      </span>
+      <div class="segmented scope-segmented" role="radiogroup" aria-label="適用範囲" data-i18n-aria-label="filterScope">
+        <input type="radio" name="filter-scope" id="scope-both" value="both" checked>
+        <label class="segmented-btn" for="scope-both" data-i18n="scopeBoth">両方</label>
+        <input type="radio" name="filter-scope" id="scope-foryou" value="foryou">
+        <label class="segmented-btn" for="scope-foryou" data-i18n="scopeForYou">おすすめ</label>
+        <input type="radio" name="filter-scope" id="scope-following" value="following">
+        <label class="segmented-btn" for="scope-following" data-i18n="scopeFollowing">フォロー中</label>
+      </div>
+    </div>
   </section>
 
   <section class="toggles">
@@ -74,18 +97,6 @@
       <input type="checkbox" id="toggle-keyword" class="switch">
     </label>
 
-    <div class="toggle-row toggle-row-longpost">
-      <span class="toggle-copy">
-        <span class="toggle-label" data-i18n="hideLongPostAccounts">文字数で投稿を非表示</span>
-        <span class="toggle-description" data-i18n="hideLongPostAccountsDescription">指定文字数を超える投稿を見つけたら、そのアカウントの投稿をすべてタイムラインから隠します。</span>
-        <span class="longpost-threshold-row">
-          <input type="number" id="longpost-threshold" class="longpost-threshold-input" min="1" max="100000" step="1" inputmode="numeric" aria-labelledby="longpost-threshold-suffix">
-          <span class="longpost-threshold-suffix" id="longpost-threshold-suffix" data-i18n="longPostThresholdSuffix">文字以上</span>
-        </span>
-      </span>
-      <input type="checkbox" id="toggle-longpost" class="switch">
-    </div>
-
     <label class="toggle-row">
       <span class="toggle-copy">
         <span class="toggle-label" data-i18n="expandShowMore">「もっと見る」を自動展開</span>
@@ -101,6 +112,18 @@
       </span>
       <input type="checkbox" id="toggle-bookmarks" class="switch">
     </label>
+
+    <div class="toggle-row toggle-row-longpost">
+      <span class="toggle-copy">
+        <span class="toggle-label" data-i18n="hideLongPostAccounts">文字数で投稿を非表示</span>
+        <span class="toggle-description" data-i18n="hideLongPostAccountsDescription">指定文字数を超える投稿を見つけたら、そのアカウントの投稿をすべてタイムラインから隠します。</span>
+        <span class="longpost-threshold-row">
+          <input type="number" id="longpost-threshold" class="longpost-threshold-input" min="1" max="100000" step="1" inputmode="numeric" aria-labelledby="longpost-threshold-suffix">
+          <span class="longpost-threshold-suffix" id="longpost-threshold-suffix" data-i18n="longPostThresholdSuffix">文字以上</span>
+        </span>
+      </span>
+      <input type="checkbox" id="toggle-longpost" class="switch">
+    </div>
 
     <div class="toggle-row toggle-row-cicada">
       <span class="toggle-copy">

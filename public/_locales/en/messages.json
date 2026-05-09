@@ -8,7 +8,7 @@
     "description": "Short extension name"
   },
   "appDescription": {
-    "message": "Hide hover cards, videos, reposts, keyword-matched posts, and distractions on X. Includes local bookmarks and zennmode.",
+    "message": "Quietly hide what you don't want on your X timeline — reposts, videos, keyword posts, and more. No tracking. Fully local.",
     "description": "Chrome Web Store and extension management description"
   },
   "actionTitle": {
@@ -18,5 +18,9 @@
   "commandOpenPopup": {
     "message": "Open Quiet X",
     "description": "Keyboard shortcut command description"
+  },
+  "commandTogglePause": {
+    "message": "Toggle Quiet X pause",
+    "description": "Keyboard shortcut for toggling the pause feature"
   }
 }
