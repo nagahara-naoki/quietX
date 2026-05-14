@@ -1,6 +1,6 @@
 # プライバシーポリシー / Privacy Policy
 
-最終更新日 / Last Updated: 2026-04-29
+最終更新日 / Last Updated: 2026-05-14
 
 ---
 
