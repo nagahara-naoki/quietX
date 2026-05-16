@@ -3,9 +3,7 @@
 [日本語](./README.md) | [English](./README-en.md)
 
 <p align="center">
-  <img src="./cat.png" alt="Quiet X — flying cat" width="320">
-  <br>
-  <sub><em>Our pet cat, sent flying by AI.</em></sub>
+  <img src="./public/icons/icon128.png" alt="Quiet X logo" width="128">
 </p>
 
 Quiet X is a Chrome extension that quietly tidies up your X (formerly Twitter) timeline. It hides hover cards, videos, images, reposts, keyword matches, posts containing URLs, and more — and lets you save posts you care about locally with a ★ button. **No analytics, no tracking, no external network calls — fully local.**

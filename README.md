@@ -3,9 +3,7 @@
 [日本語](./README.md) | [English](./README-en.md)
 
 <p align="center">
-  <img src="./cat.png" alt="Quiet X — flying cat" width="320">
-  <br>
-  <sub><em>うちで飼っている猫を AI で飛ばしました。</em></sub>
+  <img src="./public/icons/icon128.png" alt="Quiet X logo" width="128">
 </p>
 
 Quiet X は、X(旧Twitter) のタイムラインを静かに整える Chrome 拡張機能です。ホバーカード・動画・画像・リポスト・キーワード一致投稿・URL を含む投稿などをまとめて抑制し、★ボタンで気になる投稿をローカルに保存できます。**分析・トラッキングなし、外部送信なし、完全ローカル動作**。
